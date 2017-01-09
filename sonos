@@ -1,0 +1,30 @@
+#!/usr/bin/ruby
+#encoding: UTF-8
+
+require 'rubygems'
+require 'sonos'
+require 'awesome_print'
+require 'terminal-table'
+
+@rows = []
+system = Sonos::System.new # Auto-discovers your system
+system.speakers.each do |sp|
+  temp = [sp.ip, sp.name, sp.volume]
+  if sp.now_playing.nil?
+    temp.push('n/a')
+  else
+    track = sp.now_playing[:title]
+    temp.push(track)
+	if sp.volume.to_i > 15
+	    @rows.push(temp) 
+		if ARGV.length > 0
+			puts "Volume threshold reached. Lowering by 1 unit"
+			sp.volume = (sp.volume.to_i - 1)
+		end		
+	end
+  end
+end
+
+headings = %w(ip name volume track)
+table = Terminal::Table.new :headings => headings, :rows => @rows
+puts table
