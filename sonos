@@ -6,7 +6,7 @@ require 'sonos'
 require 'awesome_print'
 require 'terminal-table'
 
-@threshold = 18
+@threshold = 16
 @rows = []
 
 system = Sonos::System.new # Auto-discovers your system
