@@ -25,26 +25,30 @@ class MonitorSonos
 
   def display_info
     headings = %w(ip name volume artist title position)
-    rows = []
 
-    @speaker_info.each do |ip, details|
-      row = []
-      row << ip
-      row << details[:name]
-      row << details[:volume]
+    while true
+      rows = []
+      @speaker_info.each do |ip, details|
+        row = []
+        row << ip
+        row << details[:name]
+        row << details[:volume]
 
-      if details[:playing].nil?
-        (0..2).each { row << 'n/a' }
-      else
-        row << details[:artist]
-        row << details[:title]
-        row << "#{details[:current_position]} / #{details[:track_duration]}"
+        if details[:playing].nil?
+          (0..2).each { row << 'n/a' }
+        else
+          row << details[:playing][:artist]
+          row << details[:playing][:title]
+          row << "#{details[:playing][:current_position]} / #{details[:playing][:track_duration]}"
+        end
+
+        rows << row
       end
 
-      rows << row
+      system 'clear' or system 'cls'
+      puts Terminal::Table.new :headings => headings, :rows => rows
+      sleep 1
     end
-
-    puts Terminal::Table.new :headings => headings, :rows => rows
   end
 
   def monitor_speaker(sp)
@@ -55,9 +59,9 @@ class MonitorSonos
       @speaker_info[sp.ip] = {name: sp.name, volume: sp.volume}
 
       if sp.now_playing.nil?
-        @speaker_info[:playing] = nil
+        @speaker_info[sp.ip][:playing] = nil
       else
-        @speaker_info[:playing] = {
+        @speaker_info[sp.ip][:playing] = {
             title: sp.now_playing[:title],
             track_duration: sp.now_playing[:track_duration],
             current_position: sp.now_playing[:current_position]
