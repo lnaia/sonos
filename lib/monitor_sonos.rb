@@ -41,7 +41,7 @@ class MonitorSonos
           (0..2).each { row << 'n/a' }
         else
           row << details[:playing][:artist]
-          row << details[:playing][:title]
+          row << details[:playing][:title][0 .. 20]
           row << "#{details[:playing][:current_position]} / #{details[:playing][:track_duration]}"
         end
 
