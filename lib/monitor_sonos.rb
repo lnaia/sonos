@@ -15,9 +15,18 @@ class MonitorSonos
     @speaker_info = {}
     @volume_threshold = 19
 
-    logger = Logger.new(@logfile, 'daily')
+    logger = Logger.new(@logfile)
     logger.level = Logger::WARN
     @logger = logger
+  end
+
+  def log(msg, level = 'info')
+    if level == 'info'
+      @logger.info(msg)
+    elsif level == 'error'
+      @logger.error(msg)
+    end
+    $stdout.flush
   end
 
   def run
@@ -41,7 +50,7 @@ class MonitorSonos
           (0..2).each { row << 'n/a' }
         else
           row << details[:playing][:artist]
-          row << details[:playing][:title][0 .. 20]
+          row << details[:playing][:title]
           row << "#{details[:playing][:current_position]} / #{details[:playing][:track_duration]}"
         end
 
@@ -62,7 +71,7 @@ class MonitorSonos
   end
 
   def monitor_speaker(sp)
-    @logger.info("monitoring speaker: #{sp.ip}-#{sp.name}")
+    log("monitoring speaker: #{sp.ip}-#{sp.name}")
 
     while true
       @speaker_info[sp.ip] = {} if @speaker_info[sp.ip].nil?
@@ -89,7 +98,7 @@ class MonitorSonos
   end
 
   def update_volume(sp)
-    @logger.info("volume threshold reached: #{sp.ip}-#{sp.name}")
+    log("volume threshold reached: #{sp.ip}-#{sp.name}")
     track_duration = sp.now_playing[:track_duration]
     current_position = sp.now_playing[:current_position]
 
@@ -103,7 +112,7 @@ class MonitorSonos
     # if near the end of the music...
     if (track_total_seconds - current_second).abs <= 20
       sp.volume = sp.volume.to_i-1
-      @logger.info("lowering volume to #{sp.volume}: #{sp.ip}-#{sp.name}")
+      log("lowering volume to #{sp.volume}: #{sp.ip}-#{sp.name}")
     end
   end
 
@@ -111,7 +120,7 @@ class MonitorSonos
     threads = []
     system = Sonos::System.new
 
-    @logger.info('scanning for speakers')
+    log('scanning for speakers')
     system.speakers.each do |sp|
       threads << Thread.new do
         monitor_speaker(sp)
@@ -122,7 +131,7 @@ class MonitorSonos
       display_info
     end
 
-    @logger.info('initialize threaded monitoring')
+    log('initialize threaded monitoring')
     threads.map(&:join)
   end
 
@@ -184,7 +193,7 @@ class MonitorSonos
       data[item_key] = item
       File.open(playlist, 'w+') { |file| file.write(data.to_json) }
       git_commit("- #{now_playing[:title]} - #{now_playing[:artist]}")
-      @logger.info('playlist updated')
+      log('playlist updated')
     end
   end
 
@@ -207,7 +216,7 @@ class MonitorSonos
     unless data.key?(item_key)
       data[item_key] = item
       File.open(datafile, 'w+') { |file| file.write(data.to_json) }
-      @logger.info('volume history updated')
+      log('volume history updated')
     end
   end
 
@@ -217,9 +226,9 @@ class MonitorSonos
     git commit -m "update playlist #{msg}"`
 
     if $?.exitstatus == 0
-      @logger.info('git commit completed')
+      log('git commit completed')
     else
-      @logger.error($?.to_s)
+      log($?.to_s, 'error')
     end
 
   end
