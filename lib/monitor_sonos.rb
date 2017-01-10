@@ -10,10 +10,12 @@ class MonitorSonos
   def initialize
     current_path = File.expand_path File.dirname(__FILE__)
     @root_path = "#{current_path}/.."
+    @logfile = "#{@root_path}/log/sonos.log"
+
     @speaker_info = {}
     @volume_threshold = 19
 
-    logger = Logger.new("#{@root_path}/log/sonos.log", 'daily')
+    logger = Logger.new(@logfile, 'daily')
     logger.level = Logger::WARN
     @logger = logger
   end
@@ -48,7 +50,9 @@ class MonitorSonos
 
       # sort by ip
       rows.sort { |a, b| a.first <=> b.first }
-      rows  << :separator
+      rows << :separator
+      msg = IO.readlines(@logfile).last(1).first
+      rows << ['Last log', {value: msg, colspan: 5, alignment: :right}]
 
       system 'clear' or system 'cls'
       title = 'Monitoring Sonos Nodes in current network'
