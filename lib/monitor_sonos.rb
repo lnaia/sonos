@@ -102,8 +102,8 @@ class MonitorSonos
 
     # if near the end of the music...
     if (track_total_seconds - current_second).abs <= 20
-      @logger.info("lowering volume: #{sp.ip}-#{sp.name}")
-      #sp.volume = sp.volume.to_i-1
+      sp.volume = sp.volume.to_i-1
+      @logger.info("lowering volume to #{sp.volume}: #{sp.ip}-#{sp.name}")
     end
   end
 
