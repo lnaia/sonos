@@ -16,7 +16,7 @@ class MonitorSonos
 
     logger = Syslog::Logger.new 'MonitorSonos'
     @logger = logger
-    @recent_logs = ''
+    @recent_logs = []
   end
 
   def log(msg, level = 'info')
@@ -26,9 +26,8 @@ class MonitorSonos
       @logger.error(msg)
     end
 
-    @recent_logs = msg
-    #recent_logs << msg
-    #recent_logs.reverse[0 .. 2].reverse
+    @recent_logs << msg
+    @recent_logs = @recent_logs.reverse[0 .. 2].reverse
   end
 
   def run
@@ -62,7 +61,7 @@ class MonitorSonos
       # sort by ip
       rows.sort { |a, b| a.first <=> b.first }
       rows << :separator
-      rows << ['Recent logs', {value: recent_logs, colspan: 5, alignment: :right}]
+      rows << ['Recent logs', {value: @recent_logs.join("\n"), colspan: 5, alignment: :right}]
 
       system 'clear' or system 'cls'
       title = 'Monitoring Sonos Nodes in current network'
