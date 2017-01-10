@@ -9,30 +9,3 @@ require 'awesome_print'
 
 ms = MonitorSonos.new
 ms.run
-
-
-# def task1
-#   while true
-#     sleep 1
-#     puts "Task1: #{Time.now}"
-#   end
-# end
-#
-# def task2
-#   while true
-#     sleep 1
-#     puts "Task2: #{Time.now}"
-#   end
-# end
-#
-#
-# threads = []
-# threads << Thread.new do
-#   task1
-# end
-#
-# threads << Thread.new do
-#   task2
-# end
-#
-# threads.map(&:join)
