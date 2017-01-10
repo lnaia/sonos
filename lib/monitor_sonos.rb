@@ -28,6 +28,7 @@ class MonitorSonos
 
     while true
       rows = []
+
       @speaker_info.each do |ip, details|
         row = []
         row << ip
@@ -45,8 +46,12 @@ class MonitorSonos
         rows << row
       end
 
+      # sort by ip
+      rows.sort { |a, b| a.first <=> b.first }
+
       system 'clear' or system 'cls'
-      puts Terminal::Table.new :headings => headings, :rows => rows
+      title = 'Monitoring Sonos Nodes in current network'
+      puts Terminal::Table.new title: title, headings: headings, rows: rows
       sleep 1
     end
   end
