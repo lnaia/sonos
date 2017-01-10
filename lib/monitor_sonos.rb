@@ -48,6 +48,7 @@ class MonitorSonos
 
       # sort by ip
       rows.sort { |a, b| a.first <=> b.first }
+      rows  << :separator
 
       system 'clear' or system 'cls'
       title = 'Monitoring Sonos Nodes in current network'
