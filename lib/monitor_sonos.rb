@@ -3,21 +3,20 @@ require 'sonos'
 require 'terminal-table'
 require 'digest/md5'
 require 'json'
-require 'logger'
+require 'syslog/logger'
 
 class MonitorSonos
 
   def initialize
     current_path = File.expand_path File.dirname(__FILE__)
     @root_path = "#{current_path}/.."
-    @logfile = "#{@root_path}/log/sonos.log"
 
     @speaker_info = {}
     @volume_threshold = 19
 
-    logger = Logger.new(@logfile)
-    logger.level = Logger::WARN
+    logger = Syslog::Logger.new 'MonitorSonos'
     @logger = logger
+    @recent_logs = ''
   end
 
   def log(msg, level = 'info')
@@ -26,7 +25,10 @@ class MonitorSonos
     elsif level == 'error'
       @logger.error(msg)
     end
-    $stdout.flush
+
+    @recent_logs = msg
+    #recent_logs << msg
+    #recent_logs.reverse[0 .. 2].reverse
   end
 
   def run
@@ -60,8 +62,7 @@ class MonitorSonos
       # sort by ip
       rows.sort { |a, b| a.first <=> b.first }
       rows << :separator
-      msg = IO.readlines(@logfile).last(1).first
-      rows << ['Last log', {value: msg, colspan: 5, alignment: :right}]
+      rows << ['Recent logs', {value: recent_logs, colspan: 5, alignment: :right}]
 
       system 'clear' or system 'cls'
       title = 'Monitoring Sonos Nodes in current network'
@@ -111,7 +112,7 @@ class MonitorSonos
 
     # if near the end of the music...
     if (track_total_seconds - current_second).abs <= 20
-      sp.volume = sp.volume.to_i-1
+      #sp.volume = sp.volume.to_i-1
       log("lowering volume to #{sp.volume}: #{sp.ip}-#{sp.name}")
     end
   end
@@ -133,44 +134,6 @@ class MonitorSonos
 
     log('initialize threaded monitoring')
     threads.map(&:join)
-  end
-
-  def identify_speakers_old
-    system = Sonos::System.new # Auto-discovers your system
-    system.speakers.each do |sp|
-      temp = [sp.ip, sp.name, sp.volume]
-
-      if sp.now_playing.nil? or sp.now_playing.empty?
-        temp.push('n/a')
-        temp.push('n/a')
-      else
-        title = sp.now_playing[:title]
-        track_duration = sp.now_playing[:track_duration]
-        current_position = sp.now_playing[:current_position]
-
-        save_music(sp.now_playing)
-        track_hours, track_minutes, track_seconds = track_duration.split(':').map { |i| i.to_i }
-        curr_hours, curr_minutes, curr_seconds = current_position.split(':').map { |i| i.to_i }
-
-        # ignore hours
-        next if track_hours > 0
-
-        track_total_seconds = track_minutes*60+track_seconds
-        current_second = curr_minutes*60+curr_seconds
-
-        temp.push("#{current_second} / #{track_total_seconds}")
-        temp.push(title)
-
-        if sp.volume.to_i > @threshold and ARGV.length > 0
-          if (track_total_seconds - current_second).abs <= 20
-            puts "Volume threshold reached. Lowering by 1 unit"
-            sp.volume = (sp.volume.to_i - 1)
-          end
-        end
-      end
-
-      @rows.push(temp)
-    end
   end
 
   def save_music(now_playing)
