@@ -17,6 +17,8 @@ class MonitorSonos
     logger = Syslog::Logger.new 'MonitorSonos'
     @logger = logger
     @recent_logs = []
+
+    @track_volume_cache = {}
   end
 
   def log(msg, level = 'info')
@@ -133,10 +135,49 @@ class MonitorSonos
     current_second = curr_hours*60*60 + curr_minutes*60 + curr_seconds
 
 
-    # if near the end of the music...
+    # if near the end of the music
     if (track_total_seconds - current_second).abs <= 20
-      #sp.volume = sp.volume.to_i-1
-      log("lowering volume to #{sp.volume}: #{sp.ip}-#{sp.name}")
+      np = sp.now_playing
+      item = {
+          title: np[:title],
+          artist: np[:artist],
+          album: np[:album],
+          track_duration: np[:track_duration]
+      }
+
+      item_key = Digest::MD5.hexdigest(item.to_json)
+
+      # only lower the volume at least one time per music
+      unless track_volume_cache.key?(item_key)
+        unit = 1
+        sp.volume = sp.volume.to_i-unit
+
+        value = {
+          timesamp: Time.now,
+          total_track_seconds: track_total_seconds
+         }
+
+        track_volume_cache[item_key] = value
+        log("volume lowered by #{unit} to #{sp.volume}: #{sp.ip}-#{sp.name}")
+      end
+    end
+  end
+
+  def update_track_volume_cache
+    while true
+      log("update_track_volume_cache.start: #{track_volume_cache.keys.length} total keys")
+      track_volume_cache.each do |key, data|
+        now = Time.now.to_i
+        timestamp = data[:timestamp]
+        total_track_seconds = data[:total_track_seconds]
+
+        if now - timestamp >= track_total_seconds
+          track_volume_cache.delete(key)
+          log("track volume cache key deleted: #{key}")
+        end
+      end
+      log("update_track_volume_cache.finish: #{track_volume_cache.keys.length} keys left")
+      sleep 120
     end
   end
 
@@ -153,6 +194,10 @@ class MonitorSonos
 
     threads << Thread.new do
       display_info
+    end
+
+    threads << Thread.new do
+      update_track_volume_cache
     end
 
     log('initialize threaded monitoring')
