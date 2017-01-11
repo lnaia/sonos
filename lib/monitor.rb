@@ -5,7 +5,7 @@ require 'digest/md5'
 require 'json'
 require 'syslog/logger'
 
-class MonitorSonos
+class Monitor
 
   def initialize
     current_path = File.expand_path File.dirname(__FILE__)
