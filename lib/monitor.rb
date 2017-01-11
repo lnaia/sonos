@@ -101,7 +101,7 @@ class Monitor
           total_track_seconds: track_total_seconds
          }
 
-        track_volume_cache[item_key] = value
+        @track_volume_cache[item_key] = value
         @logger.log("volume lowered by #{unit} to #{sp.volume}: #{sp.ip}-#{sp.name}")
       end
     end
