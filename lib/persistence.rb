@@ -8,7 +8,8 @@ class Persistence
     @logger = logger
   end
 
-  def save_music(now_playing)
+  def save_music(sp)
+    now_playing = sp.now_playing
     playlist = "#{@root_path}/data/playlist.json"
     item = {
         title: now_playing[:title],

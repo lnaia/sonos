@@ -19,8 +19,8 @@ class Display
           current = details[:playing][:current_position]
           total = details[:playing][:track_duration]
 
-          row << details[:playing][:artist]
-          row << details[:playing][:title]
+          row << "#{details[:playing][:artist]}".slice(0, 20)
+          row << "#{details[:playing][:title]}".slice(0, 20)
           row << "#{current}/#{total}"
         end
 

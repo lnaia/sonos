@@ -7,8 +7,8 @@ class MonitorSonos
   def initialize
     @logger = SonosLogger.new
     @display = Display.new
-    @persistence = Persistence.new(@logger)    
-    @monitor = Monitor.new(@logger)
+    @persistence = Persistence.new(@logger)
+    @monitor = Monitor.new(@logger, @persistence)    
   end
 
   def run

@@ -3,9 +3,10 @@ require 'sonos'
 class Monitor
   attr_reader :speaker_info
 
-  def initialize(logger, volume_threshold = 18)
+  def initialize(logger, persistence, volume_threshold = 18)
     @volume_threshold = volume_threshold
     @logger = logger
+    @persistence = persistence
 
     @track_volume_cache = {}
     @speaker_info = {}
@@ -37,7 +38,7 @@ class Monitor
 
       playing = total_seconds > 0 or (artist.length > 0 and album.length > 0)
 
-      if playing
+      unless playing
         msg = "says it is playing but it is not: #{sp.ip}-#{sp.name}"
         @logger.log(msg, 'warn')
       end
@@ -57,9 +58,9 @@ class Monitor
         @speaker_info[sp.ip][:playing] = nil
       elsif is_playing?(sp)
         @speaker_info[sp.ip][:playing] = sp.now_playing
-
-        # only magic touch the volume if its playing
         update_volume(sp) if sp.volume.to_i > @volume_threshold
+        @persistence.save_volume(sp)
+        @persistence.save_music(sp)
       end
 
       sleep 3
@@ -67,7 +68,7 @@ class Monitor
   end
 
   def update_volume(sp)
-    @logger.log("volume threshold reached: #{sp.ip}-#{sp.name}")
+    #@logger.log("volume threshold reached: #{sp.ip}-#{sp.name}")
     track_duration = sp.now_playing[:track_duration]
     current_position = sp.now_playing[:current_position]
 
