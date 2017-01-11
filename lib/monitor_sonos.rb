@@ -24,6 +24,8 @@ class MonitorSonos
       @logger.info(msg)
     elsif level == 'error'
       @logger.error(msg)
+    elsif level == 'warn'
+      @logger.warn(msg)
     end
 
     @recent_logs << msg
@@ -61,12 +63,34 @@ class MonitorSonos
       # sort by ip
       rows.sort { |a, b| a.first <=> b.first }
       rows << :separator
-      rows << ['Recent logs', {value: @recent_logs.join("\n"), colspan: 5, alignment: :right}]
+      rows << ['Recent logs', {value: @recent_logs.join("\n"), colspan: 5}]
 
       system 'clear' or system 'cls'
       title = 'Monitoring Sonos Nodes in current network'
       puts Terminal::Table.new title: title, headings: headings, rows: rows
       sleep 1
+    end
+  end
+
+  def is_playing?(sp)
+    if sp.now_playing.nil?
+      false
+    else
+      artist = sp.now_playing[:artist]
+      album = sp.now_playing[:album]
+
+      track_duration = sp.now_playing[:track_duration]
+      hours, minutes, seconds = track_duration.split(':').map { |i| i.to_i }
+      total_seconds = hours*60*60 + minutes*60 + seconds
+
+      playing = total_seconds > 0 or (artist.length > 0 and album.length > 0)
+
+      if playing
+        msg = "is playing but it is not playing: #{sp.ip}-#{sp.name}"
+        log(msg, 'warn')
+      end
+
+      playing
     end
   end
 
@@ -79,7 +103,7 @@ class MonitorSonos
 
       if sp.now_playing.nil?
         @speaker_info[sp.ip][:playing] = nil
-      else
+      elsif is_playing?(sp)
         @speaker_info[sp.ip][:playing] = {
             title: sp.now_playing[:title],
             track_duration: sp.now_playing[:track_duration],
