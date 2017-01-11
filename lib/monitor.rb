@@ -62,7 +62,7 @@ class Monitor
         update_volume(sp) if sp.volume.to_i > @volume_threshold
       end
 
-      sleep 1
+      sleep 3
     end
   end
 
@@ -92,7 +92,7 @@ class Monitor
       item_key = Digest::MD5.hexdigest(item.to_json)
 
       # only lower the volume at least one time per music
-      unless track_volume_cache.key?(item_key)
+      unless @track_volume_cache.key?(item_key)
         unit = 1
         sp.volume = sp.volume.to_i-unit
 
