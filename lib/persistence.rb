@@ -1,5 +1,13 @@
+require 'digest/md5'
+require 'json'
 
-class DataOperations
+class Persistence
+  def initialize(logger)
+    current_path = File.expand_path File.dirname(__FILE__)
+    @root_path = "#{current_path}/.."
+    @logger = logger
+  end
+
   def save_music(now_playing)
     playlist = "#{@root_path}/data/playlist.json"
     item = {
@@ -20,7 +28,7 @@ class DataOperations
       data[item_key] = item
       File.open(playlist, 'w+') { |file| file.write(data.to_json) }
       git_commit("- #{now_playing[:title]} - #{now_playing[:artist]}")
-      log('playlist updated')
+      @logger.log('playlist updated')
     end
   end
 
@@ -43,7 +51,7 @@ class DataOperations
     unless data.key?(item_key)
       data[item_key] = item
       File.open(datafile, 'w+') { |file| file.write(data.to_json) }
-      log('volume history updated')
+      @logger.log('volume history updated')
     end
   end
 
@@ -53,9 +61,9 @@ class DataOperations
     git commit -m "update playlist #{msg}"`
 
     if $?.exitstatus == 0
-      log('git commit completed')
+      @logger.log('git commit completed')
     else
-      log($?.to_s, 'error')
+      @logger.log($?.to_s, 'error')
     end
 
   end

@@ -1,11 +1,13 @@
+require 'terminal-table'
+
 class Display
-  def display_info
+  def show(speaker_info = {}, recent_logs = [])
     headings = %w(ip name volume artist title position)
 
     while true
       rows = []
 
-      @speaker_info.each do |ip, details|
+      speaker_info.each do |ip, details|
         row = []
         row << ip
         row << details[:name]
@@ -14,9 +16,12 @@ class Display
         if details[:playing].nil?
           (0..2).each { row << 'n/a' }
         else
+          current = details[:playing][:current_position]
+          total = details[:playing][:track_duration]
+
           row << details[:playing][:artist]
           row << details[:playing][:title]
-          row << "#{details[:playing][:current_position]} / #{details[:playing][:track_duration]}"
+          row << "#{current}/#{total}"
         end
 
         rows << row
@@ -25,7 +30,7 @@ class Display
       # sort by ip
       rows.sort { |a, b| a.first <=> b.first }
       rows << :separator
-      rows << ['Recent logs', {value: @recent_logs.join("\n"), colspan: 5}]
+      rows << ['Recent logs', {value: recent_logs.join("\n"), colspan: 5}]
 
       system 'clear' or system 'cls'
       title = 'Monitoring Sonos Nodes in current network'

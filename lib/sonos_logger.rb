@@ -1,5 +1,6 @@
-class Logger
-  attr_reader :logger
+require 'syslog/logger'
+
+class SonosLogger  
   attr_reader :recent_logs
 
   def initialize(max_recent_log_msgs = 3)

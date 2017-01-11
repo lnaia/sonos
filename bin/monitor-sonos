@@ -5,7 +5,6 @@
 BIN_PATH = File.expand_path File.dirname(__FILE__)
 
 require_relative "#{BIN_PATH}/../lib/monitor_sonos"
-require 'awesome_print'
 
 ms = MonitorSonos.new
 ms.run
