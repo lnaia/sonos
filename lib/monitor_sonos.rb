@@ -13,6 +13,7 @@ class MonitorSonos
 
     @speaker_info = {}
     @volume_threshold = 19
+    @max_recent_log_msgs = 3
 
     logger = Syslog::Logger.new 'MonitorSonos'
     @logger = logger
@@ -21,22 +22,8 @@ class MonitorSonos
     @track_volume_cache = {}
   end
 
-  def log(msg, level = 'info')
-    if level == 'info'
-      @logger.info(msg)
-    elsif level == 'error'
-      @logger.error(msg)
-    elsif level == 'warn'
-      @logger.warn(msg)
-    end
-
-    @recent_logs << msg
-    @recent_logs = @recent_logs.reverse[0 .. 2].reverse
-  end
-
   def run
     identify_speakers
-    display_info
   end
 
   def display_info
@@ -262,5 +249,20 @@ class MonitorSonos
       log($?.to_s, 'error')
     end
 
+  end
+
+  def log(msg, level = 'info')
+    if level == 'info'
+      @logger.info(msg)
+    elsif level == 'error'
+      @logger.error(msg)
+    elsif level == 'warn'
+      @logger.warn(msg)
+    end
+
+    max = @max_recent_log_msgs-1
+    max = 0 if @max_recent_log_msgs < 0
+    @recent_logs.unshift(msg)
+    @recent_logs = @recent_logs[0 .. max]
   end
 end
