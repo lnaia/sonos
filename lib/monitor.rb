@@ -63,7 +63,7 @@ class Monitor
         @persistence.save_music(sp)
       end
 
-      sleep 3
+      sleep 10
     end
   end
 
@@ -80,7 +80,7 @@ class Monitor
 
 
     # if near the end of the music
-    if (track_total_seconds - current_second).abs <= 20
+    if (track_total_seconds - current_second).abs <= 30
       require 'digest/md5'
       np = sp.now_playing
       item = {
