@@ -4,6 +4,7 @@ module MonitorSonos
       @speakers = MonitorSonos.speakers
       @logger = MonitorSonos.logger
       @volume_threshold = MonitorSonos.config['volume_threshold']
+      @minimum_volume = MonitorSonos.config['minimum_volume']
       @heartbeat = 30
     end
 
@@ -12,6 +13,7 @@ module MonitorSonos
       MonitorSonos.join(
           MonitorSonos::Monitor.init,
           MonitorSonos::Display.init,
+          MonitorSonos::MonitorMusic.init,
           MonitorSonos::LowerSound.init(volume_threshold)
       )
     end
@@ -22,7 +24,14 @@ module MonitorSonos
 
     private
     def init(volume_threshold = nil)
-      @volume_threshold = volume_threshold unless volume_threshold.nil?
+      unless volume_threshold.nil?
+        volume_threshold = volume_threshold.to_i
+        if volume_threshold > 0
+          @volume_threshold = volume_threshold
+          @logger.info "volume_threshold set to #{@volume_threshold}"
+        end
+      end
+
       while true
         @speakers.each do |key, speaker|
           next if speaker[:raw].nil?

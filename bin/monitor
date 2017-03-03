@@ -1,0 +1,10 @@
+#!/usr/bin/ruby
+#encoding: UTF-8
+
+require_relative '../config/application'
+
+MonitorSonos.join(
+    MonitorSonos::Monitor.init,
+    MonitorSonos::Display.init,
+    MonitorSonos::MonitorMusic.init
+)
