@@ -1,13 +1,28 @@
-require 'terminal-table'
+module MonitorSonos
+  class Display
+    def initialize
+      @speakers = MonitorSonos.speakers
+    end
 
-class Display
-  def show(speaker_info = {}, recent_logs = [])
-    headings = %w(ip name volume artist title position)
+    def self.init
+      Thread.new { new.send(:init) }
+    end
 
-    while true
-      rows = []
+    private
+    def init
+      headings = %w(ip name volume artist title position)
+      while true
+        @rows = []
+        add_speaker_rows
+        system 'clear' or system 'cls'
+        title = 'Monitoring Sonos Nodes in current network'
+        puts Terminal::Table.new title: title, headings: headings, rows: @rows
+        sleep 1
+      end
+    end
 
-      speaker_info.each do |ip, details|
+    def add_speaker_rows
+      @speakers.each do |ip, details|
         row = []
         row << ip
         row << details[:name]
@@ -23,19 +38,9 @@ class Display
           row << "#{details[:playing][:title]}".slice(0, 20)
           row << "#{current}/#{total}"
         end
-
-        rows << row
+        @rows << row
       end
-
-      # sort by ip
-      rows.sort { |a, b| a.first <=> b.first }
-      rows << :separator
-      rows << ['Recent logs', {value: recent_logs.join("\n"), colspan: 5}]
-
-      system 'clear' or system 'cls'
-      title = 'Monitoring Sonos Nodes in current network'
-      puts Terminal::Table.new title: title, headings: headings, rows: rows
-      sleep 1
+      @rows.sort { |a, b| a.first <=> b.first } # sort by ip
     end
   end
 end

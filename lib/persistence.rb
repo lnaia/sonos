@@ -9,6 +9,7 @@ class Persistence
   end
 
   def save_music(sp)
+    return
     now_playing = sp.now_playing
     playlist = "#{@root_path}/data/playlist.json"
     item = {
@@ -34,6 +35,7 @@ class Persistence
   end
 
   def save_volume(sp)
+    return
     datafile = "#{@root_path}/data/volume-history.json"
     item = {
         ip: sp.ip,

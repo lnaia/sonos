@@ -1,0 +1,15 @@
+#!/usr/bin/ruby
+#encoding: UTF-8
+
+
+BIN_PATH = File.expand_path File.dirname(__FILE__)
+
+require_relative "#{BIN_PATH}/../lib/lower_sound"
+
+threshold = ARGV.first.to_i
+threshold  = 18 if threshold <= 0
+
+ls = LowerSound.new(threshold)
+ls.run
+
+
