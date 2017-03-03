@@ -3,7 +3,8 @@ module MonitorSonos
     def initialize
       @speakers = MonitorSonos.speakers
       @logfile = "#{MonitorSonos.root}/logs/music.log"
-      @logger ||= music_logger
+      @logger = MonitorSonos.logger
+      @music_logger ||= music_logger
       @heartbeat = 30
     end
 
@@ -20,23 +21,27 @@ module MonitorSonos
           artist = details[:playing][:artist]
           title = details[:playing][:title]
           album = details[:playing][:album]
-          music = "#{artist} #{album} #{title}"
+          music = "#{artist}, #{album}, #{title}"
           musics << music unless musics.include? music
         end
-        musics.each {|m| @logger.info m}
+        musics.each { |m| @music_logger.info(m) unless exists?(m) }
         sleep @heartbeat
       end
     end
 
     def exists?(string)
-      fresh = false
+      @logger.debug "exists? #{string}"
+      exists = false
       File.readlines(@logfile).each do |line|
-        if line.match(string)
-          fresh = true
+        line = line.strip
+        @logger.debug "searching #{line}"
+        if line.match(/#{string}/)
+          @logger.debug 'match found'
+          exists = true
           break
         end
       end
-      fresh
+      exists
     end
 
     def music_logger
