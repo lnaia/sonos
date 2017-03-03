@@ -14,15 +14,16 @@ module MonitorSonos
     private
     def init
       while true
+        musics = []
         @speakers.each do |ip, details|
           next if details[:playing].nil?
           artist = details[:playing][:artist]
           title = details[:playing][:title]
           album = details[:playing][:album]
-          msg = "#{artist} #{album} #{title}"
-          @logger.info msg unless exists? msg
-          sleep 0.2 # lazy wait to avoid saving N speaker music lines
+          music = "#{artist} #{album} #{title}"
+          musics << music unless musics.include? music
         end
+        musics.each {|m| @logger.info m}
         sleep @heartbeat
       end
     end
