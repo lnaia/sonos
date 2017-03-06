@@ -25,7 +25,7 @@ module MonitorSonos
     FileUtils.touch logfile unless File.exist? logfile
     @logger ||= Logger.new(logfile, 'weekly').tap do |l|
       l.progname = 'MonitorSonos'
-      l.level = Logger::INFO
+      l.level = Logger::DEBUG
       l.formatter = proc do |severity, datetime, progname, msg|
         date_format = datetime.strftime '%Y-%m-%d %H:%M:%S '
         "[#{date_format}] #{severity} (#{progname}): #{msg}\n"

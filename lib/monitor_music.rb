@@ -4,7 +4,7 @@ module MonitorSonos
       @speakers = MonitorSonos.speakers
       @logfile = "#{MonitorSonos.root}/logs/music.log"
       @logger = MonitorSonos.logger
-      @heartbeat = 30
+      @heartbeat = 5
     end
 
     def self.init
@@ -14,41 +14,28 @@ module MonitorSonos
     private
     def init
       while true
-        musics = []
+        tracks = []
         @speakers.each do |ip, details|
           next if details[:playing].nil?
           artist = details[:playing][:artist]
           title = details[:playing][:title]
           album = details[:playing][:album]
-          musics << "#{artist}, #{album}, #{title}"
+          tracks << "#{artist}, #{album}, #{title}"
         end
-        save_music musics.uniq
+        save_tracks tracks.uniq
         sleep @heartbeat
       end
     rescue => ex
       @logger.error ex.message
     end
 
-    def exists?(string)
-      @logger.debug "exists? #{string}"
-      exists = false
-      File.readlines(@logfile).each do |line|
-        line = line.strip
-        @logger.debug "searching #{line}"
-        if line.match(/\d+-\d+-\d+ #{string}/)
-          @logger.debug 'match found'
-          exists = true
-          break
-        end
-      end
-      exists
-    end
-
-    def save_music(musics)
+    def save_tracks(_list)
       time = Time.now.strftime '%Y-%m-%d'
-      lines = musics.map { |m| "#{time} #{m}" unless exists? m }.compact
-      return if lines.empty?
-      File.open(@logfile, 'a') { |file| file.write("#{lines.join("\n")}\n") }
+      @logger.debug "#{__method__} count: #{_list.count}"
+      existing = File.read(@logfile).map{|l| l.strip}.compact
+      tracks = _list.map { |m| "#{time} #{m}" } - existing
+      return if tracks.empty?
+      File.open(@logfile, 'a') { |file| file.write("#{tracks.join("\n")}\n") }
     end
   end
 end
