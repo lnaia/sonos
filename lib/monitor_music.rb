@@ -48,8 +48,7 @@ module MonitorSonos
       time = Time.now.strftime '%Y-%m-%d'
       lines = musics.map { |m| "#{time} #{m}" unless exists? m }.compact
       return if lines.empty?
-      FileUtils.touch @logfile unless File.exist? @logfile
-      File.write @logfile, "#{lines.join("\n")}\n"
+      File.open(@logfile, 'a') { |file| file.write("#{lines.join("\n")}\n") }
     end
   end
 end
