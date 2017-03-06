@@ -4,7 +4,6 @@ module MonitorSonos
       @speakers = MonitorSonos.speakers
       @logfile = "#{MonitorSonos.root}/logs/music.log"
       @logger = MonitorSonos.logger
-      @music_logger ||= music_logger
       @heartbeat = 30
     end
 
@@ -21,12 +20,13 @@ module MonitorSonos
           artist = details[:playing][:artist]
           title = details[:playing][:title]
           album = details[:playing][:album]
-          music = "#{artist}, #{album}, #{title}"
-          musics << music unless musics.include? music
+          musics << "#{artist}, #{album}, #{title}"
         end
-        musics.each { |m| @music_logger.info(m) unless exists?(m) }
+        save_music musics.uniq
         sleep @heartbeat
       end
+    rescue => ex
+      @logger.error ex.message
     end
 
     def exists?(string)
@@ -35,7 +35,7 @@ module MonitorSonos
       File.readlines(@logfile).each do |line|
         line = line.strip
         @logger.debug "searching #{line}"
-        if line.match(/#{string}/)
+        if line.match(/\d+-\d+-\d+ #{string}/)
           @logger.debug 'match found'
           exists = true
           break
@@ -44,14 +44,12 @@ module MonitorSonos
       exists
     end
 
-    def music_logger
+    def save_music(musics)
+      time = Time.now.strftime '%Y-%m-%d'
+      lines = musics.map { |m| "#{time} #{m}" unless exists? m }.compact
+      return if lines.empty?
       FileUtils.touch @logfile unless File.exist? @logfile
-      Logger.new(@logfile, 'daily').tap do |l|
-        l.formatter = proc do |severity, datetime, progname, msg|
-          date_format = datetime.strftime '%Y-%m-%d %H:%M:%S '
-          "#{date_format} #{msg}\n"
-        end
-      end
+      File.write @logfile, "#{lines.join("\n")}\n"
     end
   end
 end
