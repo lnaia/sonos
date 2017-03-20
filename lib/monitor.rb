@@ -51,6 +51,12 @@ module MonitorSonos
         end
         sleep @monitor_heartbeat
       end
+    rescue HTTPClient::ConnectTimeoutError
+      msg = 'HTTPClient::ConnectTimeoutError while trying to monitor a speaker'
+      @logger.error msg
+    rescue HTTPClient::ReceiveTimeoutError
+      msg = 'HTTPClient::ReceiveTimeoutError while trying to monitor a speaker'
+      @logger.error msg
     end
 
     def is_playing?(sp)

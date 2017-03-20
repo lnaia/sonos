@@ -32,7 +32,8 @@ module MonitorSonos
     def save_tracks(_list)
       time = Time.now.strftime '%Y-%m-%d'
       @logger.debug "#{__method__} count: #{_list.count}"
-      existing = File.read(@logfile).map{|l| l.strip}.compact
+      return if _list.empty?
+      existing = File.read(@logfile).split("\n").map{|l| l.strip}.compact
       tracks = _list.map { |m| "#{time} #{m}" } - existing
       return if tracks.empty?
       File.open(@logfile, 'a') { |file| file.write("#{tracks.join("\n")}\n") }
