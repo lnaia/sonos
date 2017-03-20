@@ -33,10 +33,17 @@ module MonitorSonos
       time = Time.now.strftime '%Y-%m-%d'
       @logger.debug "#{__method__} count: #{_list.count}"
       return if _list.empty?
-      existing = File.read(@logfile).split("\n").map{|l| l.strip}.compact
-      tracks = _list.map { |m| "#{time} #{m}" } - existing
-      return if tracks.empty?
-      File.open(@logfile, 'a') { |file| file.write("#{tracks.join("\n")}\n") }
+
+      File.read(@logfile).split("\n").each do |track|
+        tr = track.strip
+        track = tr.match(/\d{4}-\d{2}-\d{2} (.+)/).to_a.last
+        next if track.nil?
+        _list.delete track
+      end
+
+      _list.map! { |m| "#{time} #{m}" }
+      return if _list.empty?
+      File.open(@logfile, 'a') { |file| file.write("#{_list.join("\n")}\n") }
     end
   end
 end
