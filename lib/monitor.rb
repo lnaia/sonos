@@ -59,6 +59,10 @@ module MonitorSonos
       @speakers.delete speaker.ip
       msg = 'HTTPClient::ReceiveTimeoutError while trying to monitor a speaker'
       @logger.error "#{msg} #{speaker.ip}"
+    rescue HTTPClient::KeepAliveDisconnected
+      @speakers.delete speaker.ip
+      msg = 'HTTPClient::KeepAliveDisconnected while trying to monitor a speaker'
+      @logger.error "#{msg} #{speaker.ip}"
     end
 
     def is_playing?(sp)
