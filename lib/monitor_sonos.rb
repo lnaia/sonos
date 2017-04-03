@@ -1,17 +1,13 @@
-require_relative 'boot'
+require_relative '../config/boot'
 
 # Require the gems listed in Gemfile, including any gems
 Bundler.require
-require_relative 'initializer'
+require_relative '../config/initializer'
 require 'logger'
 require 'fileutils'
 
+# :nodoc:
 module MonitorSonos
-  def self.join(*args)
-    args.each { |i| threads << i }
-    threads.map(&:join)
-  end
-
   def self.root
     "#{File.expand_path File.dirname(__FILE__)}/.."
   end
@@ -33,21 +29,7 @@ module MonitorSonos
     end
   end
 
-  def self.<<(items)
-    _threads = threads
-    if items.kind_of? Array
-      _threads+= items
-    else
-      _threads << items
-    end
-    _threads
-  end
-
   def self.speakers
     @speakers ||= {}
-  end
-
-  def self.threads
-    @threads ||= []
   end
 end
