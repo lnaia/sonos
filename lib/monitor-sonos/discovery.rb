@@ -3,7 +3,7 @@ module MonitorSonos
   class Discovery
 
     def initialize
-      @heartbeat = 30
+      @heartbeat = 5
     end
 
     def self.init
@@ -13,7 +13,7 @@ module MonitorSonos
     private
 
     def init
-      Thread.new { run }.join
+      Thread.new { run }
     end
 
     def run

@@ -2,7 +2,7 @@ module MonitorSonos
   # :nodoc:
   class Monitor
     def initialize
-      @heartbeat = 15
+      @heartbeat = 5
     end
 
     def self.init
@@ -12,14 +12,15 @@ module MonitorSonos
     private
 
     def init
-      Thread.new { run }.join
+      Thread.new { run }
     end
 
     def run
       loop do
         new_speakers = monitored.keys - speakers.keys
+        logger.info "new speakers: #{new_speakers}"
         new_speakers.each do |speaker_ip|
-          thread = Thread.new { init_monitor(speaker_ip) }.join
+          thread = Thread.new { init_monitor(speaker_ip) }
           monitor_threads[speaker_ip] = thread
         end
         sleep @heartbeat

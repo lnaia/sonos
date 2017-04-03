@@ -3,6 +3,4 @@
 
 require_relative '../lib/monitor_sonos'
 
-MonitorSonos::Discovery.init
-MonitorSonos::Monitor.init
-MonitorSonos::Display.init
+MonitorSonos.monitor

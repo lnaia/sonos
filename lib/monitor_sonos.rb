@@ -32,4 +32,11 @@ module MonitorSonos
   def self.speakers
     @speakers ||= {}
   end
+
+  def self.monitor
+    threads = []
+    threads << MonitorSonos::Discovery.init
+    threads << MonitorSonos::Display.init
+    threads.map(&:join)
+  end
 end

@@ -5,7 +5,7 @@ module MonitorSonos
     def initialize
       @heartbeat = 1
     end
-    
+
     def self.init
       new.send(:init)
     end
@@ -13,12 +13,13 @@ module MonitorSonos
     private
 
     def init
-      Thread.new { run }.join
+      Thread.new { run }
     end
 
     def run
       headings = %w(ip name volume artist title position)
       loop do
+        logger.info 'display'
         @rows = []
         add_speaker_rows
         system('clear') || system('cls')
@@ -60,6 +61,10 @@ module MonitorSonos
       current = details[:playing][:current_position]
       total = details[:playing][:track_duration]
       "#{current}/#{total}"
+    end
+
+    def logger
+      MonitorSonos.logger
     end
 
     def speakers
