@@ -1,40 +1,52 @@
-def aa
-  Thread.new {
-    puts 'a'
-    sleep 1
-  }
-end
+require 'celluloid/current'
 
-def bb
-  Thread.new {
-    puts 'b'
-    sleep 1
-  }
-end
+class Test
+  include Celluloid
+
+  def initialize
+    @threads = []
+  end
+
+  def aa
+    Thread.new {
+      sleep 2
+      puts 'a'
+
+    }
+  end
+
+  def bb
+    Thread.new {
+      sleep 1
+      puts 'b'
+    }
+  end
 
 # every 5 seconds, spawns 2 threads
-def cc
-  puts 'cc'
-  loop do
+  def cc
+    threads = []
+    puts 'cc'
     2.times do
-      Thread.new { dynamic(rand(100)) }.join
+      threads << Thread.new { dynamic(rand(100)) }
     end
-    sleep 5
+    threads.map(&:join)
+    sleep 3
+
+    2.times do
+      threads << Thread.new { dynamic(rand(100)) }
+    end
+  end
+
+  def dynamic(id)
+    loop do
+      puts "dynamic thread: #{id}\n"
+      sleep 1
+    end
   end
 end
 
-def dynamic(id)
-  loop do
-    puts "dynamic thread: #{id}"
-    sleep 1
-  end
+mailer_pool = Test.pool(size: 3)
+100.times do |id|
+  mailer_pool.async.dynamic(id)
 end
-
-t = []
-t << aa
-cc
-t << bb
-t.map(&:join)
-
-
 
