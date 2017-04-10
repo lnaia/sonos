@@ -12,7 +12,8 @@ module MonitorSonos
     private
 
     def init
-      Thread.new { run }.join
+      th = Thread.new { run }.join
+      MonitorSonos.threads << th
     end
 
     def run

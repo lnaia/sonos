@@ -1,26 +1,28 @@
 module MonitorSonos
   # :nodoc:
-  class Monitor
+  class MonitorNode
     def initialize
       @heartbeat = 5
     end
 
-    def self.init
-      new.send(:init)
+    def self.init(threads)
+      new.send(:init, threads)
     end
 
     private
 
-    def init
-      Thread.new { run }
+    def init(threads)
+      @threads = threads
+      @threads << Thread.new { run }
     end
 
     def run
       loop do
         new_speakers = monitored.keys - speakers.keys
-        logger.info "new speakers: #{new_speakers}"
+        logger.info "new speakers: #{new_speakers}" if !new_speakers.empty?
         new_speakers.each do |speaker_ip|
           thread = Thread.new { init_monitor(speaker_ip) }
+          @threads << thread
           monitor_threads[speaker_ip] = thread
         end
         sleep @heartbeat
@@ -52,8 +54,10 @@ module MonitorSonos
     def reset_monitor(speaker_ip)
       speakers.delete speaker_ip
       monitored.delete speaker_ip
-      Thread.kill(monitor_threads[speaker_ip])
-      monitor_threads.delete speaker_ip
+      th = monitor_threads[speaker_ip]
+      Thread.kill(th)
+      monitor_threads.delete th
+      MonitorSonos.threads.delete th
       logger.info "monitor reset: #{speaker_ip}"
     end
 

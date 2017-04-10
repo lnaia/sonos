@@ -6,14 +6,14 @@ module MonitorSonos
       @heartbeat = 5
     end
 
-    def self.init
-      new.send(:init)
+    def self.init(threads)
+      new.send(:init, threads)
     end
 
     private
 
-    def init
-      Thread.new { run }
+    def init(threads)
+      threads << Thread.new { run }
     end
 
     def run

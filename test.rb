@@ -1,39 +1,62 @@
 require 'celluloid/current'
 
+class Animal
+  attr_accessor :threads
+
+  def run
+    th = Thread.new { stuff }
+    @threads << th
+  end
+
+  def stuff
+    loop do
+      puts "animal says stuff!"
+      sleep 1
+    end
+  end
+end
+
 class Test
-  include Celluloid
 
   def initialize
+    @joined = []
     @threads = []
   end
 
-  def aa
-    Thread.new {
-      sleep 2
-      puts 'a'
-
-    }
-  end
-
-  def bb
-    Thread.new {
+  def controller
+    loop do
+      puts "running: #{__method__}"
+      @joined.each do |th|
+        th.run
+        sleep 1
+        th.stop
+      end
       sleep 1
-      puts 'b'
-    }
+    end
   end
 
-# every 5 seconds, spawns 2 threads
-  def cc
-    threads = []
-    puts 'cc'
-    2.times do
-      threads << Thread.new { dynamic(rand(100)) }
+  def watcher
+    loop do
+      puts "running: #{__method__}"
+      th = @threads.pop
+      @joined << th.join
+      sleep 1
     end
-    threads.map(&:join)
-    sleep 3
+  end
 
+  def run
+    @threads << Thread.new { watcher }
+    @threads << Thread.new { cc }
+    a = Animal.new
+    a.threads = @threads
+    a.run
+    controller
+  end
+
+  def cc
+    puts "running: #{__method__}"
     2.times do
-      threads << Thread.new { dynamic(rand(100)) }
+      @threads << Thread.new { dynamic(rand(100)) }
     end
   end
 
@@ -43,10 +66,9 @@ class Test
       sleep 1
     end
   end
+
 end
 
-mailer_pool = Test.pool(size: 3)
-100.times do |id|
-  mailer_pool.async.dynamic(id)
-end
 
+t = Test.new
+t.run
