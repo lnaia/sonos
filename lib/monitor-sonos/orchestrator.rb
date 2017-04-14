@@ -5,8 +5,8 @@ module MonitorSonos
     attr_accessor :threads
 
     def initialize
-      @threads = []
-      @joined_threads ||= []
+      @threads = Queue.new
+      @joined ||= Queue.new
     end
 
     def self.monitor
@@ -21,7 +21,6 @@ module MonitorSonos
 
     def monitor
       #logger.info "running: #{__method__}"
-      @threads << Thread.new { watcher }
       MonitorSonos::Discovery.init(@threads)
       MonitorSonos::MonitorNode.init(@threads)
       MonitorSonos::Display.init(@threads)
@@ -29,24 +28,33 @@ module MonitorSonos
     end
 
     def orchestrator
+      watcher
       loop do
-        #logger.info "running: #{__method__}"
-        @joined_threads.each do |th|
+        logger.info "#{__method__}, @joined: #{@joined.length}"
+
+        queue = Queue.new
+        until @joined.empty?
+          th = @joined.pop
           th.run
           sleep 1
           th.stop
+          queue << th
         end
+        @joined = queue
+
         sleep 1
       end
     end
 
     def watcher
-      loop do
-        #logger.info "running: #{__method__}"
-        th = @threads.pop
-        @joined_threads << th.join
-        sleep 1
+      th = Thread.new do
+        loop do
+          logger.info "#{__method__}, @threads: #{@threads.length}"
+          @joined << @threads.pop.join
+          sleep 1
+        end
       end
+      @threads << th
     end
 
     def logger
