@@ -1,6 +1,6 @@
-require_relative 'communication'
+require_relative 'lib/communication/bootstrap'
 
-Communication.server do |client|
+Communication::Bootstrap.server do |client|
   # client is connected
   loop do
     client << "this is me: #{Time.now.to_i}"
