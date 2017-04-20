@@ -3,11 +3,7 @@
 
 require_relative '../lib/monitor_sonos'
 
-Process.fork do
-  MonitorSonos::Discovery.init
-end
-
-
-#Process.fork { MonitorSonos::MonitorNode.run }
-
-puts "the end"
+Process.fork { MonitorSonos::MonitorNode.init }
+Process.fork { MonitorSonos::MonitorMusic.init }
+Process.fork { MonitorSonos::Display.init }
+MonitorSonos::Discovery.init

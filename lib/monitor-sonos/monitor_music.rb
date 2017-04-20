@@ -2,7 +2,7 @@ module MonitorSonos
   # :nodoc:
   class MonitorMusic
     def initialize
-      @heartbeat = 5
+      @heartbeat = 30
     end
 
     def self.init
@@ -19,7 +19,8 @@ module MonitorSonos
       loop do
         tracks = []
         speakers.each do |_, details|
-          tracks << get_track(details) unless details[:playing].nil?
+          details = JSON.parse(details)
+          tracks << get_track(details) unless details['playing'].nil?
         end
         save_tracks tracks.uniq unless tracks.empty?
         sleep @heartbeat
@@ -27,10 +28,10 @@ module MonitorSonos
     end
 
     def get_track(details)
-      playing = details[:playing]
-      artist = playing[:artist]
-      title = playing[:title]
-      album = playing[:album]
+      playing = details['playing']
+      artist = playing['artist']
+      title = playing['title']
+      album = playing['album']
       "#{artist}, #{album}, #{title}"
     end
 
@@ -49,7 +50,7 @@ module MonitorSonos
     end
 
     def speakers
-      MonitorSonos.speakers
+      Redis.new.hgetall('h_speakers')
     end
 
     def logger

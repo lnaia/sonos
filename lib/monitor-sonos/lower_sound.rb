@@ -28,9 +28,7 @@ module MonitorSonos
 
     def run
       loop do
-        speakers.each do |speaker_ip, _|
-          update_volume(Sonos::System.new(speaker_ip))
-        end
+        speakers.each { |speaker| update_volume(speaker) }
         sleep @heartbeat
       end
     end
@@ -44,7 +42,7 @@ module MonitorSonos
     end
 
     def speakers
-      MonitorSonos.speakers
+      Sonos::System.new.speakers
     end
 
     def logger

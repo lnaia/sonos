@@ -5,6 +5,7 @@ Bundler.require
 require_relative '../config/initializer'
 require 'logger'
 require 'fileutils'
+require 'json'
 
 # :nodoc:
 module MonitorSonos

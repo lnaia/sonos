@@ -24,31 +24,20 @@ module MonitorSonos
     end
 
     def discover
-      logger.info 'scanning for speakers'
-      sonos.speakers.each do |speaker|
-        unless speakers.include?(speaker.ip)
-          logger.info "speaker found at: #{speaker.ip}"
-          register(speaker.ip)
-        end
-      end
+      sonos.speakers.each { |speaker| publish(speaker) }
     end
 
-    def register(ip)
-      existing_speakers = speakers
-      existing_speakers << ip
-      redis.set('speakers', existing_speakers)
+    def publish(speaker)
+      logger.info "speaker found at #{speaker.ip}"
+      redis.publish 'c_speakers', { uid: speaker.uid }.to_json
+    end
+
+    def redis
+      Redis.new
     end
 
     def logger
       MonitorSonos.logger
-    end
-
-    def speakers
-      redis.get('speakers') || []
-    end
-
-    def redis
-      Redis.current
     end
 
     def sonos

@@ -12,55 +12,44 @@ module MonitorSonos
     private
 
     def init
-      run
-    end
-
-    def run
-      loop do
-        new_speakers = monitored - speakers
-        logger.info "new speakers: #{new_speakers}" unless new_speakers.empty?
-        new_speakers.each { |ip| handle_new_speaker(ip) }
-        sleep @heartbeat
+      redis.subscribe('c_speakers') do |on|
+        on.message do |channel, msg|
+          data = JSON.parse(msg)
+          uid = data['uid']
+          handle_new_speaker(uid) unless uid.nil?
+        end
       end
     end
 
-    def handle_new_speaker(ip)
+    def handle_new_speaker(uid)
+      return if monitoring? uid
       Process.fork do
-        Process.detach Process.pid
-        init_monitor(ip)
+        Process.detach(Process.pid)
+        init_monitor(uid)
       end
     end
 
-    def init_monitor(speaker_ip)
-      logger.info "monitoring speaker: #{speaker_ip}"
+    def init_monitor(uid)
+      logger.info "monitoring speaker: #{uid}"
       loop do
-        monitor(speaker_ip)
+        monitor(uid)
         sleep @heartbeat
       end
     rescue => ex
-      reset_monitor(speaker_ip)
-      logger.error "Exception at speaker [#{speaker_ip}] #{ex.message}"
+      logger.error "Exception at speaker [#{uid}] #{ex.message}"
+      ap ex
     end
 
-    def monitor(speaker_ip)
-      speaker = Sonos::System.new(speaker_ip)
-      speakers[speaker.ip] = {
-        raw: speaker,
-        name: speaker.name,
-        volume: speaker.volume,
-        playing: playing?(speaker) ? speaker.now_playing : nil
-      }
-      monitored[speaker_ip] = true
-    end
-
-    def reset_monitor(speaker_ip)
-      speakers.delete speaker_ip
-      monitored.delete speaker_ip
-      th = monitor_threads[speaker_ip]
-      Thread.kill(th)
-      monitor_threads.delete th
-      MonitorSonos.threads.delete th
-      logger.info "monitor reset: #{speaker_ip}"
+    def monitor(uid)
+      Sonos::System.new.speakers.each do |speaker|
+        next unless speaker.uid == uid
+        save(uid,
+             name: speaker.name,
+             ip: speaker.ip,
+             volume: speaker.volume,
+             monitor_pid: Process.pid,
+             playing: playing?(speaker) ? speaker.now_playing : nil)
+      end
     end
 
     def playing?(speaker)
@@ -68,6 +57,15 @@ module MonitorSonos
       hours, minutes, seconds = track_duration(speaker)
       total_seconds = hours * 60 * 60 + minutes * 60 + seconds
       total_seconds > 0 || (artist?(speaker) && album?(speaker))
+    end
+
+    def monitoring?(uid)
+      json_data = redis.hget('h_speakers', uid)
+      return false if json_data.nil?
+      data = JSON.parse(json_data)
+      pid = data['monitor_pid'].to_s.strip
+      exists = `ps -p #{pid} -o pid | grep #{pid}`
+      exists.strip == pid
     end
 
     def track_duration(speaker)
@@ -82,16 +80,12 @@ module MonitorSonos
       !speaker.now_playing[:album].empty?
     end
 
-    def monitored
-      @monitored ||= []
-    end
-
-    def speakers
-      redis.get(:speakers) || []
+    def save(key, data)
+      redis.hmset('h_speakers', [key, data.to_json])
     end
 
     def redis
-      Redis.current
+      Redis.new
     end
 
     def logger
