@@ -5,27 +5,29 @@ module MonitorSonos
       @heartbeat = 5
     end
 
-    def self.init(threads)
-      new.send(:init, threads)
+    def self.init
+      new.send(:init)
     end
 
     private
 
-    def init(threads)
-      @threads = threads
-      @threads << Thread.new { run }
+    def init
+      run
     end
 
     def run
       loop do
-        new_speakers = monitored.keys - speakers.keys
-        logger.info "new speakers: #{new_speakers}" if !new_speakers.empty?
-        new_speakers.each do |speaker_ip|
-          thread = Thread.new { init_monitor(speaker_ip) }
-          @threads << thread
-          monitor_threads[speaker_ip] = thread
-        end
+        new_speakers = monitored - speakers
+        logger.info "new speakers: #{new_speakers}" unless new_speakers.empty?
+        new_speakers.each { |ip| handle_new_speaker(ip) }
         sleep @heartbeat
+      end
+    end
+
+    def handle_new_speaker(ip)
+      Process.fork do
+        Process.detach Process.pid
+        init_monitor(ip)
       end
     end
 
@@ -81,15 +83,15 @@ module MonitorSonos
     end
 
     def monitored
-      @monitored ||= {}
-    end
-
-    def monitor_threads
-      @monitor_threads ||= {}
+      @monitored ||= []
     end
 
     def speakers
-      MonitorSonos.speakers
+      redis.get(:speakers) || []
+    end
+
+    def redis
+      Redis.current
     end
 
     def logger

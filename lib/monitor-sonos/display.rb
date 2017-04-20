@@ -6,20 +6,19 @@ module MonitorSonos
       @heartbeat = 1
     end
 
-    def self.init(threads)
-      new.send(:init, threads)
+    def self.init
+      new.send(:init)
     end
 
     private
 
-    def init(threads)
-      threads << Thread.new { run }
+    def init
+      run
     end
 
     def run
       headings = %w(ip name volume artist title position)
       loop do
-        #logger.info 'display'
         @rows = []
         add_speaker_rows
         system('clear') || system('cls')

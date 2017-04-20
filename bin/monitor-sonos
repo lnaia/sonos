@@ -3,4 +3,11 @@
 
 require_relative '../lib/monitor_sonos'
 
-MonitorSonos::Orchestrator.monitor
+Process.fork do
+  MonitorSonos::Discovery.init
+end
+
+
+#Process.fork { MonitorSonos::MonitorNode.run }
+
+puts "the end"

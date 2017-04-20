@@ -15,7 +15,7 @@ module MonitorSonos
 
     def init(volume_threshold)
       init_volume_threshold(volume_threshold)
-      Thread.new { run }.join
+      run
     end
 
     def init_volume_threshold(volume_threshold = nil)
