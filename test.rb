@@ -1,74 +1,31 @@
-require 'celluloid/current'
+require_relative 'lib/communication/bootstrap'
+require_relative 'lib/communication/bootstrap'
 
-class Animal
-  attr_accessor :threads
-
-  def run
-    th = Thread.new { stuff }
-    @threads << th
-  end
-
-  def stuff
-    loop do
-      puts "animal says stuff!"
-      sleep 1
-    end
+def start_server
+  spawn('ruby server.rb').tap do |pid|
+    Process.detach(pid)
+    start_client(pid)
   end
 end
 
-class Test
-
-  def initialize
-    @joined = []
-    @threads = []
-  end
-
-  def controller
-    loop do
-      puts "running: #{__method__}"
-      @joined.each do |th|
-        th.run
-        sleep 1
-        th.stop
+def start_client(server_pid)
+  puts 'start client'
+  keep_trying = true
+  while keep_trying
+    begin
+      puts 'trying to connect...'
+      Communication::Bootstrap.client do |payload|
+        puts "i just got this from the server: #{payload}"
       end
-      sleep 1
+    rescue Errno::ECONNREFUSED
+      puts 'Connection refusing, trying again....'
+    rescue
+      keep_trying = false
     end
+    sleep 1
   end
-
-  def watcher
-    loop do
-      puts "running: #{__method__}"
-      th = @threads.pop
-      @joined << th.join
-      sleep 1
-    end
-  end
-
-  def run
-    @threads << Thread.new { watcher }
-    @threads << Thread.new { cc }
-    a = Animal.new
-    a.threads = @threads
-    a.run
-    controller
-  end
-
-  def cc
-    puts "running: #{__method__}"
-    2.times do
-      @threads << Thread.new { dynamic(rand(100)) }
-    end
-  end
-
-  def dynamic(id)
-    loop do
-      puts "dynamic thread: #{id}\n"
-      sleep 1
-    end
-  end
-
+ensure
+  Process.kill(9, server_pid)
 end
 
-
-t = Test.new
-t.run
+start_server
