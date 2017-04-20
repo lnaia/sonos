@@ -3,7 +3,7 @@ module MonitorSonos
   class Discovery
 
     def initialize
-      @heartbeat = 5
+      @heartbeat = 30
     end
 
     def self.init
@@ -24,11 +24,12 @@ module MonitorSonos
     end
 
     def discover
-      sonos.speakers.each { |speaker| publish(speaker) }
+      speakers = sonos.speakers
+      logger.info "found #{speakers.length} speakers in the network"
+      speakers.each { |speaker| publish(speaker) }
     end
 
     def publish(speaker)
-      logger.info "speaker found at #{speaker.ip}"
       redis.publish 'c_speakers', { uid: speaker.uid }.to_json
     end
 
