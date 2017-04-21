@@ -12,10 +12,6 @@ module MonitorSonos
     private
 
     def init
-      run
-    end
-
-    def run
       loop do
         tracks = []
         speakers.each do |_, details|
@@ -50,7 +46,7 @@ module MonitorSonos
     end
 
     def speakers
-      Redis.new.hgetall('h_speakers')
+      MonitorSonos.speakers
     end
 
     def logger

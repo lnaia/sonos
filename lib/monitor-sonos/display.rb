@@ -13,10 +13,6 @@ module MonitorSonos
     private
 
     def init
-      run
-    end
-
-    def run
       headings = %w(name volume artist title position)
       loop do
         @rows = []
@@ -62,12 +58,8 @@ module MonitorSonos
       "#{current}/#{total}"
     end
 
-    def logger
-      MonitorSonos.logger
-    end
-
     def speakers
-      Redis.new.hgetall('h_speakers')
+      MonitorSonos.speakers
     end
   end
 end

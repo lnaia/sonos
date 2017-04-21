@@ -12,8 +12,8 @@ module MonitorSonos
     private
 
     def init
-      redis.subscribe('c_speakers') do |on|
-        on.message do |channel, msg|
+      MonitorSonos.subscribe('c_speakers') do |on|
+        on.message do |_, msg|
           data = JSON.parse(msg)
           uid = data['uid']
           handle_new_speaker(uid) unless uid.nil?
@@ -41,7 +41,7 @@ module MonitorSonos
     end
 
     def monitor(uid)
-      Sonos::System.new.speakers.each do |speaker|
+      speakers.each do |speaker|
         next unless speaker.uid == uid
         save(uid,
              name: speaker.name,
@@ -60,7 +60,7 @@ module MonitorSonos
     end
 
     def monitoring?(uid)
-      json_data = redis.hget('h_speakers', uid)
+      json_data = MonitorSonos.speakers(uid)
       return false if json_data.nil?
       data = JSON.parse(json_data)
       pid = data['monitor_pid'].to_s.strip
@@ -81,15 +81,15 @@ module MonitorSonos
     end
 
     def save(key, data)
-      redis.hmset('h_speakers', [key, data.to_json])
-    end
-
-    def redis
-      Redis.new
+      MonitorSonos.save_speaker(key, data)
     end
 
     def logger
       MonitorSonos.logger
+    end
+
+    def speakers
+      Sonos::System.new.speakers
     end
   end
 end
