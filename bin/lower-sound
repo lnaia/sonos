@@ -3,9 +3,8 @@
 
 require_relative '../lib/monitor_sonos'
 
+Process.fork { MonitorSonos::MonitorNode.init }
+Process.fork { MonitorSonos::MonitorMusic.init }
+Process.fork { MonitorSonos::LowerSound.init(ARGV.first) }
+Process.fork { MonitorSonos::Display.init }
 MonitorSonos::Discovery.init
-MonitorSonos::Monitor.init
-MonitorSonos::Display.init
-MonitorSonos::LowerSound.init ARGV.first
-MonitorSonos::MonitorMusic.init
-

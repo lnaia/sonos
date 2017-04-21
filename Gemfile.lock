@@ -17,6 +17,7 @@ GEM
       mini_portile2 (~> 2.1.0)
     nori (2.6.0)
     rack (2.0.1)
+    redis (3.3.3)
     savon (2.11.1)
       akami (~> 1.2)
       builder (>= 2.1.2)
@@ -44,6 +45,7 @@ PLATFORMS
 
 DEPENDENCIES
   awesome_print
+  redis
   sonos
   terminal-table
 

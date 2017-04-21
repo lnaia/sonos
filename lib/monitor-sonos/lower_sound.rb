@@ -15,7 +15,7 @@ module MonitorSonos
 
     def init(volume_threshold)
       init_volume_threshold(volume_threshold)
-      Thread.new { run }.join
+      run
     end
 
     def init_volume_threshold(volume_threshold = nil)
@@ -28,9 +28,7 @@ module MonitorSonos
 
     def run
       loop do
-        speakers.each do |speaker_ip, _|
-          update_volume(Sonos::System.new(speaker_ip))
-        end
+        speakers.each { |speaker| update_volume(speaker) }
         sleep @heartbeat
       end
     end
@@ -44,7 +42,7 @@ module MonitorSonos
     end
 
     def speakers
-      MonitorSonos.speakers
+      Sonos::System.new.speakers
     end
 
     def logger

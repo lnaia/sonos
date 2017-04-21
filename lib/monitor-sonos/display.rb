@@ -6,20 +6,15 @@ module MonitorSonos
       @heartbeat = 1
     end
 
-    def self.init(threads)
-      new.send(:init, threads)
+    def self.init
+      new.send(:init)
     end
 
     private
 
-    def init(threads)
-      threads << Thread.new { run }
-    end
-
-    def run
-      headings = %w(ip name volume artist title position)
+    def init
+      headings = %w(name volume artist title position)
       loop do
-        #logger.info 'display'
         @rows = []
         add_speaker_rows
         system('clear') || system('cls')
@@ -30,41 +25,37 @@ module MonitorSonos
     end
 
     def add_speaker_rows
-      speakers.each do |ip, details|
-        @rows << add_speaker_row(ip, details)
+      speakers.each do |_, details|
+        details = JSON.parse(details)
+        @rows << add_speaker_row(details)
       end
       @rows.sort_by(&:first) # sort by ip
     end
 
-    def add_speaker_row(ip, details)
+    def add_speaker_row(details)
       row = []
-      row << ip
-      row << details[:name]
-      row << details[:volume]
+      row << details['name']
+      row << details['volume']
       row << playing_rows(details)
       row.flatten
     end
 
     def playing_rows(details)
-      if details[:playing].nil?
+      if details['playing'].nil?
         %w(n/a n/a n/a)
       else
         [
-          details[:playing][:artist].to_s.slice(0, 20),
-          details[:playing][:title].to_s.slice(0, 20),
+          details['playing']['artist'].to_s.slice(0, 20),
+          details['playing']['title'].to_s.slice(0, 20),
           track_status(details)
         ]
       end
     end
 
     def track_status(details)
-      current = details[:playing][:current_position]
-      total = details[:playing][:track_duration]
+      current = details['playing']['current_position']
+      total = details['playing']['track_duration']
       "#{current}/#{total}"
-    end
-
-    def logger
-      MonitorSonos.logger
     end
 
     def speakers

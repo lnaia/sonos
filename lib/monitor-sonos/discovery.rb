@@ -3,20 +3,16 @@ module MonitorSonos
   class Discovery
 
     def initialize
-      @heartbeat = 5
+      @heartbeat = 30
     end
 
-    def self.init(threads)
-      new.send(:init, threads)
+    def self.init
+      new.send(:init)
     end
 
     private
 
-    def init(threads)
-      threads << Thread.new { run }
-    end
-
-    def run
+    def init
       loop do
         discover
         sleep @heartbeat
@@ -24,25 +20,9 @@ module MonitorSonos
     end
 
     def discover
-      logger.info 'scanning for speakers'
-      sonos.speakers.each do |speaker|
-        unless speakers.key?(speaker.ip)
-          logger.info "speaker found at: #{speaker.ip}"
-          speakers[speaker.ip] = {}
-        end
+      Sonos::System.new.speakers.each do |speaker|
+        MonitorSonos.publish(uid: speaker.uid)
       end
-    end
-
-    def logger
-      MonitorSonos.logger
-    end
-
-    def speakers
-      MonitorSonos.speakers
-    end
-
-    def sonos
-      @sonos ||= Sonos::System.new
     end
   end
 end
